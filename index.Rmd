@@ -1,0 +1,105 @@
+---
+title: "Visualizing Multivariate Data"
+output:
+  html_document:
+    df_print: paged
+---
+## Course: Visual Analytics for Policy and Management
+
+### Kimberly Pearson
+
+_____
+<a id='part1'></a>
+
+# Exercise 3: Visualizing Tabular data
+
+### [Multivariate Case](https://github.com/EvansDataScience/VisualAnalytics_tabularDataMulti)
+
+1. [Descriptive](#part2)
+
+2. [Inferential](#part3) 
+
+## Descriptive plots
+
+The word descriptive is used because our intention is not to go beyond the units of analysis we have.
+
+Data About City Safety: (https://jpn.nec.com/en/global/ad/insite/download/economist/en/data_workbook_dl.html):
+
+
+```{r TitleData, eval=TRUE} 
+library(ggplot2)
+library(openxlsx)
+link2="https://github.com/EvansDataScience/data/raw/master/safeCitiesIndex.xlsx"
+title="Cities Around the World, from Least to Most Safe"
+title2="Digital is Most Influential Factor to City Safety"
+source="Source: Safe Cities Index"
+
+safe2=read.xlsx(link2)
+safe2x=safe2
+safe2x$min=apply(safe2x[,c(2:5)],1,min)
+safe2x$min=rank(safe2x$min,ties.method ='first' )
+cityRk=as.factor(safe2x[order(safe2x$min),]$city)
+safe2x$city=factor(safe2x$city,
+                   levels= cityRk,
+                   labels = cityRk,
+                   ordered = T)
+safe2x$min=NULL
+```
+
+```{r Descriptive, eval=TRUE}
+library(ggiraph)
+library(ggiraphExtra)
+
+base = ggRadar(safe2x,aes(group='city'),legend.position="none") 
+
+plot1 = base + facet_wrap(~city,ncol = 10) + labs(title = title,
+                    x =NULL, 
+                    y = NULL,
+                    caption = source) + 
+                    theme(plot.caption = element_text(hjust = 0, size = 10),
+                        plot.title = element_text(hjust = 0.5, size = 20))
+
+plot1 #+ geom_polygon(fill = 'white',col='orange')
+```
+
+
+```{r Inferential, eval=TRUE}
+cut=median(safe2$PERSONAL)
+safe2$PERSONAL_bi=ifelse(safe2$PERSONAL>cut,
+                         1,0)
+logit_PERSONAL = glm(PERSONAL_bi~ .,
+                          data = safe2[,-c(1,5)],
+                          family = "binomial")
+summary(logit_PERSONAL)
+library(margins)
+margins_logit_PERSONAL = margins(logit_PERSONAL) 
+
+marginalSummary=summary(margins_logit_PERSONAL)
+
+# just to see the results better:
+
+as.data.frame(marginalSummary)
+```
+```{r Inferential2, eval=TRUE}
+base = ggplot(data = marginalSummary)
+eff1=base +  geom_point(aes(factor, AME))
+eff2= eff1 + geom_errorbar(aes(x = factor, ymin = lower, ymax = upper),
+                           colour=c('blue','violet','violet'))
+##
+MESSAGE1="Increases the probability of \n being a safe city \n by 1.7% on average "
+##
+
+eff3 = eff2 + geom_hline(yintercept = 0) + labs(title = title2,
+                    x = "Factors", 
+                    y = "Percentages",
+                    caption = source) + 
+                    theme(plot.caption = element_text(hjust = 0, size = 10),
+                        plot.title = element_text(hjust = 0.5, size = 20)) 
+
+eff3 + annotate("text", x = 1.5, 
+                y = 0.02, 
+                label = MESSAGE1) 
+```
+
+
+
