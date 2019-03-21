@@ -26,7 +26,7 @@ The word descriptive is used because our intention is not to go beyond the units
 Data About City Safety: (https://jpn.nec.com/en/global/ad/insite/download/economist/en/data_workbook_dl.html):
 
 
-```{r TitleData, eval=TRUE} 
+```{r Descriptive1, eval=TRUE} 
 library(ggplot2)
 library(openxlsx)
 link2="https://github.com/EvansDataScience/data/raw/master/safeCitiesIndex.xlsx"
@@ -35,7 +35,29 @@ title2="Digital is Most Influential Factor to City Safety"
 source="Source: Safe Cities Index"
 
 safe2=read.xlsx(link2)
-safe2x=safe2
+safe2A=melt(safe2,id.vars = 'city')
+
+base  = ggplot(safe2A, aes(x = variable, y = value, group = city))
+plot1 = base + geom_polygon(fill = 'gray',col='orange') + coord_polar()
+plot2 = plot1 + facet_wrap(~reorder(city, value, median, order=TRUE))
+plot3 = plot2 + labs(title = title,
+                    x = NULL, 
+                    y = NULL,
+                    caption = source)
+plot4 = plot3 + theme(axis.text.x = element_text(face = "bold", size = 7),
+                legend.position="none",
+                strip.text = element_text(size = 15),
+                plot.title = element_text(size = 40, hjust = .5),
+                plot.caption = element_text(size = 20, hjust = 0))
+plot4
+```
+
+```{r Descriptive2, eval=TRUE}
+#This graph didn't work as well; I'm not sure why the sizing is incorrect. 
+
+library(ggiraph)
+library(ggiraphExtra)
+
 safe2x$min=apply(safe2x[,c(2:5)],1,min)
 safe2x$min=rank(safe2x$min,ties.method ='first' )
 cityRk=as.factor(safe2x[order(safe2x$min),]$city)
@@ -44,22 +66,17 @@ safe2x$city=factor(safe2x$city,
                    labels = cityRk,
                    ordered = T)
 safe2x$min=NULL
-```
-
-```{r Descriptive, eval=TRUE}
-library(ggiraph)
-library(ggiraphExtra)
 
 base = ggRadar(safe2x,aes(group='city'),legend.position="none") 
 
 plot1 = base + facet_wrap(~city,ncol = 10) + labs(title = title,
-                    x =NULL, 
+                    x = NULL, 
                     y = NULL,
                     caption = source) + 
                     theme(plot.caption = element_text(hjust = 0, size = 10),
                         plot.title = element_text(hjust = 0.5, size = 20))
 
-plot1 #+ geom_polygon(fill = 'white',col='orange')
+plot1 
 ```
 
 
