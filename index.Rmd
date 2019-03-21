@@ -25,32 +25,41 @@ The word descriptive is used because our intention is not to go beyond the units
 
 Data About City Safety: (https://jpn.nec.com/en/global/ad/insite/download/economist/en/data_workbook_dl.html):
 
-
-```{r Descriptive1, eval=TRUE} 
+```{r calllibraries, eval=TRUE}
 library(ggplot2)
 library(openxlsx)
+library(reshape)
+```
+
+
+```{r DataTitles, eval=TRUE} 
 link2="https://github.com/EvansDataScience/data/raw/master/safeCitiesIndex.xlsx"
 title="Cities Around the World, from Least to Most Safe"
 title2="Digital is Most Influential Factor to City Safety"
 source="Source: Safe Cities Index"
 
 safe2=read.xlsx(link2)
-safe2A=melt(safe2,id.vars = 'city')
+safe2A=melt(safe2,
+           id.vars = 'city')
+```
 
+
+```{r Descriptive1}
 base  = ggplot(safe2A, aes(x = variable, y = value, group = city))
 plot1 = base + geom_polygon(fill = 'gray',col='orange') + coord_polar()
-plot2 = plot1 + facet_wrap(~reorder(city, value, median, order=TRUE))
+plot2 = plot1 + facet_wrap(~reorder(city, value, median, order=TRUE), ncol=7)
 plot3 = plot2 + labs(title = title,
                     x = NULL, 
                     y = NULL,
                     caption = source)
-plot4 = plot3 + theme(axis.text.x = element_text(face = "bold", size = 7),
+plot4 = plot3 + theme(axis.text.x = element_text(size = 7),
                 legend.position="none",
                 strip.text = element_text(size = 15),
-                plot.title = element_text(size = 40, hjust = .5),
+                plot.title = element_text(size = 20, hjust = .5),
                 plot.caption = element_text(size = 20, hjust = 0))
 plot4
 ```
+
 
 ```{r Descriptive2, eval=TRUE}
 #This graph didn't work as well; I'm not sure why the sizing is incorrect. 
